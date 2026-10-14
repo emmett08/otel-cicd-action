@@ -33220,523 +33220,6 @@ function getOctokit(token, options, ...additionalPlugins) {
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-//----------------------------------------------------------------------------------------------------------
-// DO NOT EDIT, this is an Auto-generated file from scripts/semconv/templates/registry/stable/attributes.ts.j2
-//----------------------------------------------------------------------------------------------------------
-/**
- * ASP.NET Core exception middleware handling result.
- *
- * @example handled
- * @example unhandled
- */
-/**
- * Describes a class of error the operation ended with.
- *
- * @example timeout
- * @example java.net.UnknownHostException
- * @example server_certificate_invalid
- * @example 500
- *
- * @note The `error.type` **SHOULD** be predictable, and **SHOULD** have low cardinality.
- *
- * When `error.type` is set to a type (e.g., an exception type), its
- * canonical class name identifying the type within the artifact **SHOULD** be used.
- *
- * Instrumentations **SHOULD** document the list of errors they report.
- *
- * The cardinality of `error.type` within one instrumentation library **SHOULD** be low.
- * Telemetry consumers that aggregate data from multiple instrumentation libraries and applications
- * should be prepared for `error.type` to have high cardinality at query time when no
- * additional filters are applied.
- *
- * If the operation has completed successfully, instrumentations **SHOULD NOT** set `error.type`.
- *
- * If a specific domain defines its own set of error identifiers (such as HTTP or RPC status codes),
- * it's **RECOMMENDED** to:
- *
- *   - Use a domain-specific attribute
- *   - Set `error.type` to capture all errors, regardless of whether they are defined within the domain-specific set or not.
- */
-const ATTR_ERROR_TYPE = 'error.type';
-/**
- * The exception message.
- *
- * @example Division by zero
- * @example Can't convert 'int' object to str implicitly
- *
- * @note > [!WARNING]
- *
- * > This attribute may contain sensitive information.
- */
-const ATTR_EXCEPTION_MESSAGE = 'exception.message';
-/**
- * A stacktrace as a string in the natural representation for the language runtime. The representation is to be determined and documented by each language SIG.
- *
- * @example "Exception in thread "main" java.lang.RuntimeException: Test exception\\n at com.example.GenerateTrace.methodB(GenerateTrace.java:13)\\n at com.example.GenerateTrace.methodA(GenerateTrace.java:9)\\n at com.example.GenerateTrace.main(GenerateTrace.java:5)\\n"
- */
-const ATTR_EXCEPTION_STACKTRACE = 'exception.stacktrace';
-/**
- * The type of the exception (its fully-qualified class name, if applicable). The dynamic type of the exception should be preferred over the static type in languages that support it.
- *
- * @example java.net.ConnectException
- * @example OSError
- */
-const ATTR_EXCEPTION_TYPE = 'exception.type';
-/**
- * The string ID of the service instance.
- *
- * @example 627cc493-f310-47de-96bd-71410b7dec09
- *
- * @note **MUST** be unique for each instance of the same `service.namespace,service.name` pair (in other words
- * `service.namespace,service.name,service.instance.id` triplet **MUST** be globally unique). The ID helps to
- * distinguish instances of the same service that exist at the same time (e.g. instances of a horizontally scaled
- * service).
- *
- * Implementations, such as SDKs, are recommended to generate a random Version 1 or Version 4 [RFC
- * 4122](https://www.ietf.org/rfc/rfc4122.txt) UUID, but are free to use an inherent unique ID as the source of
- * this value if stability is desirable. In that case, the ID **SHOULD** be used as source of a UUID Version 5 and
- * **SHOULD** use the following UUID as the namespace: `4d63009a-8d0f-11ee-aad7-4c796ed8e320`.
- *
- * UUIDs are typically recommended, as only an opaque value for the purposes of identifying a service instance is
- * needed. Similar to what can be seen in the man page for the
- * [`/etc/machine-id`](https://www.freedesktop.org/software/systemd/man/latest/machine-id.html) file, the underlying
- * data, such as pod name and namespace should be treated as confidential, being the user's choice to expose it
- * or not via another resource attribute.
- *
- * For applications running behind an application server (like unicorn), we do not recommend using one identifier
- * for all processes participating in the application. Instead, it's recommended each division (e.g. a worker
- * thread in unicorn) to have its own instance.id.
- *
- * It's not recommended for a Collector to set `service.instance.id` if it can't unambiguously determine the
- * service instance that is generating that telemetry. For instance, creating an UUID based on `pod.name` will
- * likely be wrong, as the Collector might not know from which container within that pod the telemetry originated.
- * However, Collectors can set the `service.instance.id` if they can unambiguously determine the service instance
- * for that telemetry. This is typically the case for scraping receivers, as they know the target address and
- * port.
- */
-const ATTR_SERVICE_INSTANCE_ID = 'service.instance.id';
-/**
- * Logical name of the service.
- *
- * @example shoppingcart
- *
- * @note **MUST** be the same for all instances of horizontally scaled services. If the value was not specified, SDKs **MUST** fallback to `unknown_service:` concatenated with [`process.executable.name`](process.md), e.g. `unknown_service:bash`. If `process.executable.name` is not available, the value **MUST** be set to `unknown_service`.
- */
-const ATTR_SERVICE_NAME = 'service.name';
-/**
- * A namespace for `service.name`.
- *
- * @example Shop
- *
- * @note A string value having a meaning that helps to distinguish a group of services, for example the team name that owns a group of services. `service.name` is expected to be unique within the same namespace. If `service.namespace` is not specified in the Resource then `service.name` is expected to be unique for all services that have no explicit namespace defined (so the empty/unspecified namespace is simply one more valid namespace). Zero-length namespace string is assumed equal to unspecified namespace.
- */
-const ATTR_SERVICE_NAMESPACE = 'service.namespace';
-/**
- * The version string of the service component. The format is not defined by these conventions.
- *
- * @example 2.0.0
- * @example a01dbef8a
- */
-const ATTR_SERVICE_VERSION = 'service.version';
-/**
- * The language of the telemetry SDK.
- */
-const ATTR_TELEMETRY_SDK_LANGUAGE = 'telemetry.sdk.language';
-/**
- * Enum value "nodejs" for attribute {@link ATTR_TELEMETRY_SDK_LANGUAGE}.
- */
-const TELEMETRY_SDK_LANGUAGE_VALUE_NODEJS = "nodejs";
-/**
- * The name of the telemetry SDK as defined above.
- *
- * @example opentelemetry
- *
- * @note The OpenTelemetry SDK **MUST** set the `telemetry.sdk.name` attribute to `opentelemetry`.
- * If another SDK, like a fork or a vendor-provided implementation, is used, this SDK **MUST** set the
- * `telemetry.sdk.name` attribute to the fully-qualified class or module name of this SDK's main entry point
- * or another suitable identifier depending on the language.
- * The identifier `opentelemetry` is reserved and **MUST NOT** be used in this case.
- * All custom identifiers **SHOULD** be stable across different versions of an implementation.
- */
-const ATTR_TELEMETRY_SDK_NAME = 'telemetry.sdk.name';
-/**
- * The version string of the telemetry SDK.
- *
- * @example 1.2.3
- */
-const ATTR_TELEMETRY_SDK_VERSION = 'telemetry.sdk.version';
-
-/*
- * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-//----------------------------------------------------------------------------------------------------------
-// DO NOT EDIT, this is an Auto-generated file from scripts/semconv/templates/registry/stable/attributes.ts.j2
-//----------------------------------------------------------------------------------------------------------
-/**
- * This attribute represents the state of the application.
- *
- * @example created
- *
- * @note The Android lifecycle states are defined in [Activity lifecycle callbacks](https://developer.android.com/guide/components/activities/activity-lifecycle#lc), and from which the `OS identifiers` are derived.
- *
- * @experimental This attribute is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
- */
-/**
- * The kind of action a pipeline run is performing.
- *
- * @example BUILD
- * @example RUN
- * @example SYNC
- *
- * @experimental This attribute is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
- */
-const ATTR_CICD_PIPELINE_ACTION_NAME = 'cicd.pipeline.action.name';
-/**
- * Enum value "RUN" for attribute {@link ATTR_CICD_PIPELINE_ACTION_NAME}.
- *
- * The pipeline run is executing.
- *
- * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
- */
-const CICD_PIPELINE_ACTION_NAME_VALUE_RUN = "RUN";
-/**
- * The human readable name of the pipeline within a CI/CD system.
- *
- * @example Build and Test
- * @example Lint
- * @example Deploy Go Project
- * @example deploy_to_environment
- *
- * @experimental This attribute is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
- */
-const ATTR_CICD_PIPELINE_NAME = 'cicd.pipeline.name';
-/**
- * The result of a pipeline run.
- *
- * @example success
- * @example failure
- * @example timeout
- * @example skipped
- *
- * @experimental This attribute is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
- */
-const ATTR_CICD_PIPELINE_RESULT = 'cicd.pipeline.result';
-/**
- * Enum value "cancellation" for attribute {@link ATTR_CICD_PIPELINE_RESULT}.
- *
- * The pipeline run was cancelled, eg. by a user manually cancelling the pipeline run.
- *
- * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
- */
-const CICD_PIPELINE_RESULT_VALUE_CANCELLATION = "cancellation";
-/**
- * Enum value "error" for attribute {@link ATTR_CICD_PIPELINE_RESULT}.
- *
- * The pipeline run failed due to an error in the CICD system, eg. due to the worker being killed.
- *
- * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
- */
-const CICD_PIPELINE_RESULT_VALUE_ERROR = "error";
-/**
- * Enum value "failure" for attribute {@link ATTR_CICD_PIPELINE_RESULT}.
- *
- * The pipeline run did not finish successfully, eg. due to a compile error or a failing test. Such failures are usually detected by non-zero exit codes of the tools executed in the pipeline run.
- *
- * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
- */
-const CICD_PIPELINE_RESULT_VALUE_FAILURE = "failure";
-/**
- * Enum value "skip" for attribute {@link ATTR_CICD_PIPELINE_RESULT}.
- *
- * The pipeline run was skipped, eg. due to a precondition not being met.
- *
- * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
- */
-const CICD_PIPELINE_RESULT_VALUE_SKIP = "skip";
-/**
- * Enum value "success" for attribute {@link ATTR_CICD_PIPELINE_RESULT}.
- *
- * The pipeline run finished successfully.
- *
- * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
- */
-const CICD_PIPELINE_RESULT_VALUE_SUCCESS = "success";
-/**
- * Enum value "timeout" for attribute {@link ATTR_CICD_PIPELINE_RESULT}.
- *
- * A timeout caused the pipeline run to be interrupted.
- *
- * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
- */
-const CICD_PIPELINE_RESULT_VALUE_TIMEOUT = "timeout";
-/**
- * The unique identifier of a pipeline run within a CI/CD system.
- *
- * @example 120912
- *
- * @experimental This attribute is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
- */
-const ATTR_CICD_PIPELINE_RUN_ID = 'cicd.pipeline.run.id';
-/**
- * The pipeline run goes through these states during its lifecycle.
- *
- * @example pending
- * @example executing
- * @example finalizing
- *
- * @experimental This attribute is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
- */
-const ATTR_CICD_PIPELINE_RUN_STATE = 'cicd.pipeline.run.state';
-/**
- * Enum value "executing" for attribute {@link ATTR_CICD_PIPELINE_RUN_STATE}.
- *
- * The executing state spans the execution of any run tasks (eg. build, test).
- *
- * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
- */
-const CICD_PIPELINE_RUN_STATE_VALUE_EXECUTING = "executing";
-/**
- * Enum value "finalizing" for attribute {@link ATTR_CICD_PIPELINE_RUN_STATE}.
- *
- * The finalizing state spans from when the run has finished executing (eg. cleanup of run resources).
- *
- * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
- */
-const CICD_PIPELINE_RUN_STATE_VALUE_FINALIZING = "finalizing";
-/**
- * Enum value "pending" for attribute {@link ATTR_CICD_PIPELINE_RUN_STATE}.
- *
- * The run pending state spans from the event triggering the pipeline run until the execution of the run starts (eg. time spent in a queue, provisioning agents, creating run resources).
- *
- * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
- */
-const CICD_PIPELINE_RUN_STATE_VALUE_PENDING = "pending";
-/**
- * The [URL](https://wikipedia.org/wiki/URL) of the pipeline run, providing the complete address in order to locate and identify the pipeline run.
- *
- * @example https://github.com/open-telemetry/semantic-conventions/actions/runs/9753949763?pr=1075
- *
- * @experimental This attribute is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
- */
-const ATTR_CICD_PIPELINE_RUN_URL_FULL = 'cicd.pipeline.run.url.full';
-/**
- * The human readable name of a task within a pipeline. Task here most closely aligns with a [computing process](https://wikipedia.org/wiki/Pipeline_(computing)) in a pipeline. Other terms for tasks include commands, steps, and procedures.
- *
- * @example Run GoLang Linter
- * @example Go Build
- * @example go-test
- * @example deploy_binary
- *
- * @experimental This attribute is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
- */
-const ATTR_CICD_PIPELINE_TASK_NAME = 'cicd.pipeline.task.name';
-/**
- * The unique identifier of a task run within a pipeline.
- *
- * @example 12097
- *
- * @experimental This attribute is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
- */
-const ATTR_CICD_PIPELINE_TASK_RUN_ID = 'cicd.pipeline.task.run.id';
-/**
- * The result of a task run.
- *
- * @example success
- * @example failure
- * @example timeout
- * @example skipped
- *
- * @experimental This attribute is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
- */
-const ATTR_CICD_PIPELINE_TASK_RUN_RESULT = 'cicd.pipeline.task.run.result';
-/**
- * Enum value "cancellation" for attribute {@link ATTR_CICD_PIPELINE_TASK_RUN_RESULT}.
- *
- * The task run was cancelled, eg. by a user manually cancelling the task run.
- *
- * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
- */
-const CICD_PIPELINE_TASK_RUN_RESULT_VALUE_CANCELLATION = "cancellation";
-/**
- * Enum value "failure" for attribute {@link ATTR_CICD_PIPELINE_TASK_RUN_RESULT}.
- *
- * The task run did not finish successfully, eg. due to a compile error or a failing test. Such failures are usually detected by non-zero exit codes of the tools executed in the task run.
- *
- * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
- */
-const CICD_PIPELINE_TASK_RUN_RESULT_VALUE_FAILURE = "failure";
-/**
- * Enum value "skip" for attribute {@link ATTR_CICD_PIPELINE_TASK_RUN_RESULT}.
- *
- * The task run was skipped, eg. due to a precondition not being met.
- *
- * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
- */
-const CICD_PIPELINE_TASK_RUN_RESULT_VALUE_SKIP = "skip";
-/**
- * Enum value "success" for attribute {@link ATTR_CICD_PIPELINE_TASK_RUN_RESULT}.
- *
- * The task run finished successfully.
- *
- * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
- */
-const CICD_PIPELINE_TASK_RUN_RESULT_VALUE_SUCCESS = "success";
-/**
- * Enum value "timeout" for attribute {@link ATTR_CICD_PIPELINE_TASK_RUN_RESULT}.
- *
- * A timeout caused the task run to be interrupted.
- *
- * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
- */
-const CICD_PIPELINE_TASK_RUN_RESULT_VALUE_TIMEOUT = "timeout";
-/**
- * The [URL](https://wikipedia.org/wiki/URL) of the pipeline task run, providing the complete address in order to locate and identify the pipeline task run.
- *
- * @example https://github.com/open-telemetry/semantic-conventions/actions/runs/9753949763/job/26920038674?pr=1075
- *
- * @experimental This attribute is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
- */
-const ATTR_CICD_PIPELINE_TASK_RUN_URL_FULL = 'cicd.pipeline.task.run.url.full';
-/**
- * The type of the task within a pipeline.
- *
- * @example build
- * @example test
- * @example deploy
- *
- * @experimental This attribute is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
- */
-const ATTR_CICD_PIPELINE_TASK_TYPE = 'cicd.pipeline.task.type';
-/**
- * Enum value "build" for attribute {@link ATTR_CICD_PIPELINE_TASK_TYPE}.
- *
- * build
- *
- * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
- */
-const CICD_PIPELINE_TASK_TYPE_VALUE_BUILD = "build";
-/**
- * Enum value "deploy" for attribute {@link ATTR_CICD_PIPELINE_TASK_TYPE}.
- *
- * deploy
- *
- * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
- */
-const CICD_PIPELINE_TASK_TYPE_VALUE_DEPLOY = "deploy";
-/**
- * Enum value "test" for attribute {@link ATTR_CICD_PIPELINE_TASK_TYPE}.
- *
- * test
- *
- * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
- */
-const CICD_PIPELINE_TASK_TYPE_VALUE_TEST = "test";
-/**
- * The unique identifier of a worker within a CICD system.
- *
- * @example abc123
- * @example 10.0.1.2
- * @example controller
- *
- * @experimental This attribute is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
- */
-const ATTR_CICD_WORKER_ID = 'cicd.worker.id';
-/**
- * The name of a worker within a CICD system.
- *
- * @example agent-abc
- * @example controller
- * @example Ubuntu LTS
- *
- * @experimental This attribute is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
- */
-const ATTR_CICD_WORKER_NAME = 'cicd.worker.name';
-
-// Modest cap to stay clear of GitHub's secondary rate limits on concurrent requests
-const MAX_CONCURRENT_REQUESTS = 8;
-async function mapWithConcurrency(items, fn) {
-    const results = new Array(items.length);
-    let nextIndex = 0;
-    async function worker() {
-        while (nextIndex < items.length) {
-            const i = nextIndex++;
-            results[i] = await fn(items[i]);
-        }
-    }
-    await Promise.all(Array.from({ length: Math.min(MAX_CONCURRENT_REQUESTS, items.length) }, worker));
-    return results;
-}
-async function getWorkflowRun(context, octokit, runId) {
-    const res = await octokit.rest.actions.getWorkflowRun({
-        ...context.repo,
-        run_id: runId,
-    });
-    return res.data;
-}
-async function listJobsForWorkflowRun(context, octokit, runId) {
-    return await octokit.paginate(octokit.rest.actions.listJobsForWorkflowRun, {
-        ...context.repo,
-        run_id: runId,
-        filter: "latest", // risk of missing a run if re-run happens between Action trigger and this query
-        per_page: 100,
-    });
-}
-async function getJobsAnnotations(context, octokit, jobIds) {
-    const annotations = {};
-    const results = await mapWithConcurrency(jobIds, (jobId) => listAnnotations(context, octokit, jobId));
-    for (const [i, jobId] of jobIds.entries()) {
-        annotations[jobId] = results[i];
-    }
-    return annotations;
-}
-async function listAnnotations(context, octokit, checkRunId) {
-    return await octokit.paginate(octokit.rest.checks.listAnnotations, {
-        ...context.repo,
-        check_run_id: checkRunId,
-    });
-}
-async function getPRsLabels(context, octokit, prNumbers) {
-    const labels = {};
-    const results = await mapWithConcurrency(prNumbers, (prNumber) => listLabelsOnIssue(context, octokit, prNumber));
-    for (const [i, prNumber] of prNumbers.entries()) {
-        labels[prNumber] = results[i];
-    }
-    return labels;
-}
-async function listLabelsOnIssue(context, octokit, prNumber) {
-    return await octokit.paginate(octokit.rest.issues.listLabelsOnIssue, {
-        ...context.repo,
-        issue_number: prNumber,
-    }, (response) => response.data.map((issue) => issue.name));
-}
-
-/*
- * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 /** only globals that common to node and browsers are allowed */
 // eslint-disable-next-line node/no-unsupported-features/es-builtins
 var _globalThis$1 = typeof globalThis === 'object' ? globalThis : global;
@@ -36072,6 +35555,523 @@ var esm$4 = /*#__PURE__*/Object.freeze({
     trace: trace
 });
 
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+//----------------------------------------------------------------------------------------------------------
+// DO NOT EDIT, this is an Auto-generated file from scripts/semconv/templates/registry/stable/attributes.ts.j2
+//----------------------------------------------------------------------------------------------------------
+/**
+ * ASP.NET Core exception middleware handling result.
+ *
+ * @example handled
+ * @example unhandled
+ */
+/**
+ * Describes a class of error the operation ended with.
+ *
+ * @example timeout
+ * @example java.net.UnknownHostException
+ * @example server_certificate_invalid
+ * @example 500
+ *
+ * @note The `error.type` **SHOULD** be predictable, and **SHOULD** have low cardinality.
+ *
+ * When `error.type` is set to a type (e.g., an exception type), its
+ * canonical class name identifying the type within the artifact **SHOULD** be used.
+ *
+ * Instrumentations **SHOULD** document the list of errors they report.
+ *
+ * The cardinality of `error.type` within one instrumentation library **SHOULD** be low.
+ * Telemetry consumers that aggregate data from multiple instrumentation libraries and applications
+ * should be prepared for `error.type` to have high cardinality at query time when no
+ * additional filters are applied.
+ *
+ * If the operation has completed successfully, instrumentations **SHOULD NOT** set `error.type`.
+ *
+ * If a specific domain defines its own set of error identifiers (such as HTTP or RPC status codes),
+ * it's **RECOMMENDED** to:
+ *
+ *   - Use a domain-specific attribute
+ *   - Set `error.type` to capture all errors, regardless of whether they are defined within the domain-specific set or not.
+ */
+const ATTR_ERROR_TYPE = 'error.type';
+/**
+ * The exception message.
+ *
+ * @example Division by zero
+ * @example Can't convert 'int' object to str implicitly
+ *
+ * @note > [!WARNING]
+ *
+ * > This attribute may contain sensitive information.
+ */
+const ATTR_EXCEPTION_MESSAGE = 'exception.message';
+/**
+ * A stacktrace as a string in the natural representation for the language runtime. The representation is to be determined and documented by each language SIG.
+ *
+ * @example "Exception in thread "main" java.lang.RuntimeException: Test exception\\n at com.example.GenerateTrace.methodB(GenerateTrace.java:13)\\n at com.example.GenerateTrace.methodA(GenerateTrace.java:9)\\n at com.example.GenerateTrace.main(GenerateTrace.java:5)\\n"
+ */
+const ATTR_EXCEPTION_STACKTRACE = 'exception.stacktrace';
+/**
+ * The type of the exception (its fully-qualified class name, if applicable). The dynamic type of the exception should be preferred over the static type in languages that support it.
+ *
+ * @example java.net.ConnectException
+ * @example OSError
+ */
+const ATTR_EXCEPTION_TYPE = 'exception.type';
+/**
+ * The string ID of the service instance.
+ *
+ * @example 627cc493-f310-47de-96bd-71410b7dec09
+ *
+ * @note **MUST** be unique for each instance of the same `service.namespace,service.name` pair (in other words
+ * `service.namespace,service.name,service.instance.id` triplet **MUST** be globally unique). The ID helps to
+ * distinguish instances of the same service that exist at the same time (e.g. instances of a horizontally scaled
+ * service).
+ *
+ * Implementations, such as SDKs, are recommended to generate a random Version 1 or Version 4 [RFC
+ * 4122](https://www.ietf.org/rfc/rfc4122.txt) UUID, but are free to use an inherent unique ID as the source of
+ * this value if stability is desirable. In that case, the ID **SHOULD** be used as source of a UUID Version 5 and
+ * **SHOULD** use the following UUID as the namespace: `4d63009a-8d0f-11ee-aad7-4c796ed8e320`.
+ *
+ * UUIDs are typically recommended, as only an opaque value for the purposes of identifying a service instance is
+ * needed. Similar to what can be seen in the man page for the
+ * [`/etc/machine-id`](https://www.freedesktop.org/software/systemd/man/latest/machine-id.html) file, the underlying
+ * data, such as pod name and namespace should be treated as confidential, being the user's choice to expose it
+ * or not via another resource attribute.
+ *
+ * For applications running behind an application server (like unicorn), we do not recommend using one identifier
+ * for all processes participating in the application. Instead, it's recommended each division (e.g. a worker
+ * thread in unicorn) to have its own instance.id.
+ *
+ * It's not recommended for a Collector to set `service.instance.id` if it can't unambiguously determine the
+ * service instance that is generating that telemetry. For instance, creating an UUID based on `pod.name` will
+ * likely be wrong, as the Collector might not know from which container within that pod the telemetry originated.
+ * However, Collectors can set the `service.instance.id` if they can unambiguously determine the service instance
+ * for that telemetry. This is typically the case for scraping receivers, as they know the target address and
+ * port.
+ */
+const ATTR_SERVICE_INSTANCE_ID = 'service.instance.id';
+/**
+ * Logical name of the service.
+ *
+ * @example shoppingcart
+ *
+ * @note **MUST** be the same for all instances of horizontally scaled services. If the value was not specified, SDKs **MUST** fallback to `unknown_service:` concatenated with [`process.executable.name`](process.md), e.g. `unknown_service:bash`. If `process.executable.name` is not available, the value **MUST** be set to `unknown_service`.
+ */
+const ATTR_SERVICE_NAME = 'service.name';
+/**
+ * A namespace for `service.name`.
+ *
+ * @example Shop
+ *
+ * @note A string value having a meaning that helps to distinguish a group of services, for example the team name that owns a group of services. `service.name` is expected to be unique within the same namespace. If `service.namespace` is not specified in the Resource then `service.name` is expected to be unique for all services that have no explicit namespace defined (so the empty/unspecified namespace is simply one more valid namespace). Zero-length namespace string is assumed equal to unspecified namespace.
+ */
+const ATTR_SERVICE_NAMESPACE = 'service.namespace';
+/**
+ * The version string of the service component. The format is not defined by these conventions.
+ *
+ * @example 2.0.0
+ * @example a01dbef8a
+ */
+const ATTR_SERVICE_VERSION = 'service.version';
+/**
+ * The language of the telemetry SDK.
+ */
+const ATTR_TELEMETRY_SDK_LANGUAGE = 'telemetry.sdk.language';
+/**
+ * Enum value "nodejs" for attribute {@link ATTR_TELEMETRY_SDK_LANGUAGE}.
+ */
+const TELEMETRY_SDK_LANGUAGE_VALUE_NODEJS = "nodejs";
+/**
+ * The name of the telemetry SDK as defined above.
+ *
+ * @example opentelemetry
+ *
+ * @note The OpenTelemetry SDK **MUST** set the `telemetry.sdk.name` attribute to `opentelemetry`.
+ * If another SDK, like a fork or a vendor-provided implementation, is used, this SDK **MUST** set the
+ * `telemetry.sdk.name` attribute to the fully-qualified class or module name of this SDK's main entry point
+ * or another suitable identifier depending on the language.
+ * The identifier `opentelemetry` is reserved and **MUST NOT** be used in this case.
+ * All custom identifiers **SHOULD** be stable across different versions of an implementation.
+ */
+const ATTR_TELEMETRY_SDK_NAME = 'telemetry.sdk.name';
+/**
+ * The version string of the telemetry SDK.
+ *
+ * @example 1.2.3
+ */
+const ATTR_TELEMETRY_SDK_VERSION = 'telemetry.sdk.version';
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+//----------------------------------------------------------------------------------------------------------
+// DO NOT EDIT, this is an Auto-generated file from scripts/semconv/templates/registry/stable/attributes.ts.j2
+//----------------------------------------------------------------------------------------------------------
+/**
+ * This attribute represents the state of the application.
+ *
+ * @example created
+ *
+ * @note The Android lifecycle states are defined in [Activity lifecycle callbacks](https://developer.android.com/guide/components/activities/activity-lifecycle#lc), and from which the `OS identifiers` are derived.
+ *
+ * @experimental This attribute is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
+ */
+/**
+ * The kind of action a pipeline run is performing.
+ *
+ * @example BUILD
+ * @example RUN
+ * @example SYNC
+ *
+ * @experimental This attribute is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
+ */
+const ATTR_CICD_PIPELINE_ACTION_NAME = 'cicd.pipeline.action.name';
+/**
+ * Enum value "RUN" for attribute {@link ATTR_CICD_PIPELINE_ACTION_NAME}.
+ *
+ * The pipeline run is executing.
+ *
+ * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
+ */
+const CICD_PIPELINE_ACTION_NAME_VALUE_RUN = "RUN";
+/**
+ * The human readable name of the pipeline within a CI/CD system.
+ *
+ * @example Build and Test
+ * @example Lint
+ * @example Deploy Go Project
+ * @example deploy_to_environment
+ *
+ * @experimental This attribute is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
+ */
+const ATTR_CICD_PIPELINE_NAME = 'cicd.pipeline.name';
+/**
+ * The result of a pipeline run.
+ *
+ * @example success
+ * @example failure
+ * @example timeout
+ * @example skipped
+ *
+ * @experimental This attribute is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
+ */
+const ATTR_CICD_PIPELINE_RESULT = 'cicd.pipeline.result';
+/**
+ * Enum value "cancellation" for attribute {@link ATTR_CICD_PIPELINE_RESULT}.
+ *
+ * The pipeline run was cancelled, eg. by a user manually cancelling the pipeline run.
+ *
+ * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
+ */
+const CICD_PIPELINE_RESULT_VALUE_CANCELLATION = "cancellation";
+/**
+ * Enum value "error" for attribute {@link ATTR_CICD_PIPELINE_RESULT}.
+ *
+ * The pipeline run failed due to an error in the CICD system, eg. due to the worker being killed.
+ *
+ * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
+ */
+const CICD_PIPELINE_RESULT_VALUE_ERROR = "error";
+/**
+ * Enum value "failure" for attribute {@link ATTR_CICD_PIPELINE_RESULT}.
+ *
+ * The pipeline run did not finish successfully, eg. due to a compile error or a failing test. Such failures are usually detected by non-zero exit codes of the tools executed in the pipeline run.
+ *
+ * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
+ */
+const CICD_PIPELINE_RESULT_VALUE_FAILURE = "failure";
+/**
+ * Enum value "skip" for attribute {@link ATTR_CICD_PIPELINE_RESULT}.
+ *
+ * The pipeline run was skipped, eg. due to a precondition not being met.
+ *
+ * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
+ */
+const CICD_PIPELINE_RESULT_VALUE_SKIP = "skip";
+/**
+ * Enum value "success" for attribute {@link ATTR_CICD_PIPELINE_RESULT}.
+ *
+ * The pipeline run finished successfully.
+ *
+ * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
+ */
+const CICD_PIPELINE_RESULT_VALUE_SUCCESS = "success";
+/**
+ * Enum value "timeout" for attribute {@link ATTR_CICD_PIPELINE_RESULT}.
+ *
+ * A timeout caused the pipeline run to be interrupted.
+ *
+ * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
+ */
+const CICD_PIPELINE_RESULT_VALUE_TIMEOUT = "timeout";
+/**
+ * The unique identifier of a pipeline run within a CI/CD system.
+ *
+ * @example 120912
+ *
+ * @experimental This attribute is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
+ */
+const ATTR_CICD_PIPELINE_RUN_ID = 'cicd.pipeline.run.id';
+/**
+ * The pipeline run goes through these states during its lifecycle.
+ *
+ * @example pending
+ * @example executing
+ * @example finalizing
+ *
+ * @experimental This attribute is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
+ */
+const ATTR_CICD_PIPELINE_RUN_STATE = 'cicd.pipeline.run.state';
+/**
+ * Enum value "executing" for attribute {@link ATTR_CICD_PIPELINE_RUN_STATE}.
+ *
+ * The executing state spans the execution of any run tasks (eg. build, test).
+ *
+ * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
+ */
+const CICD_PIPELINE_RUN_STATE_VALUE_EXECUTING = "executing";
+/**
+ * Enum value "finalizing" for attribute {@link ATTR_CICD_PIPELINE_RUN_STATE}.
+ *
+ * The finalizing state spans from when the run has finished executing (eg. cleanup of run resources).
+ *
+ * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
+ */
+const CICD_PIPELINE_RUN_STATE_VALUE_FINALIZING = "finalizing";
+/**
+ * Enum value "pending" for attribute {@link ATTR_CICD_PIPELINE_RUN_STATE}.
+ *
+ * The run pending state spans from the event triggering the pipeline run until the execution of the run starts (eg. time spent in a queue, provisioning agents, creating run resources).
+ *
+ * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
+ */
+const CICD_PIPELINE_RUN_STATE_VALUE_PENDING = "pending";
+/**
+ * The [URL](https://wikipedia.org/wiki/URL) of the pipeline run, providing the complete address in order to locate and identify the pipeline run.
+ *
+ * @example https://github.com/open-telemetry/semantic-conventions/actions/runs/9753949763?pr=1075
+ *
+ * @experimental This attribute is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
+ */
+const ATTR_CICD_PIPELINE_RUN_URL_FULL = 'cicd.pipeline.run.url.full';
+/**
+ * The human readable name of a task within a pipeline. Task here most closely aligns with a [computing process](https://wikipedia.org/wiki/Pipeline_(computing)) in a pipeline. Other terms for tasks include commands, steps, and procedures.
+ *
+ * @example Run GoLang Linter
+ * @example Go Build
+ * @example go-test
+ * @example deploy_binary
+ *
+ * @experimental This attribute is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
+ */
+const ATTR_CICD_PIPELINE_TASK_NAME = 'cicd.pipeline.task.name';
+/**
+ * The unique identifier of a task run within a pipeline.
+ *
+ * @example 12097
+ *
+ * @experimental This attribute is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
+ */
+const ATTR_CICD_PIPELINE_TASK_RUN_ID = 'cicd.pipeline.task.run.id';
+/**
+ * The result of a task run.
+ *
+ * @example success
+ * @example failure
+ * @example timeout
+ * @example skipped
+ *
+ * @experimental This attribute is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
+ */
+const ATTR_CICD_PIPELINE_TASK_RUN_RESULT = 'cicd.pipeline.task.run.result';
+/**
+ * Enum value "cancellation" for attribute {@link ATTR_CICD_PIPELINE_TASK_RUN_RESULT}.
+ *
+ * The task run was cancelled, eg. by a user manually cancelling the task run.
+ *
+ * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
+ */
+const CICD_PIPELINE_TASK_RUN_RESULT_VALUE_CANCELLATION = "cancellation";
+/**
+ * Enum value "failure" for attribute {@link ATTR_CICD_PIPELINE_TASK_RUN_RESULT}.
+ *
+ * The task run did not finish successfully, eg. due to a compile error or a failing test. Such failures are usually detected by non-zero exit codes of the tools executed in the task run.
+ *
+ * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
+ */
+const CICD_PIPELINE_TASK_RUN_RESULT_VALUE_FAILURE = "failure";
+/**
+ * Enum value "skip" for attribute {@link ATTR_CICD_PIPELINE_TASK_RUN_RESULT}.
+ *
+ * The task run was skipped, eg. due to a precondition not being met.
+ *
+ * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
+ */
+const CICD_PIPELINE_TASK_RUN_RESULT_VALUE_SKIP = "skip";
+/**
+ * Enum value "success" for attribute {@link ATTR_CICD_PIPELINE_TASK_RUN_RESULT}.
+ *
+ * The task run finished successfully.
+ *
+ * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
+ */
+const CICD_PIPELINE_TASK_RUN_RESULT_VALUE_SUCCESS = "success";
+/**
+ * Enum value "timeout" for attribute {@link ATTR_CICD_PIPELINE_TASK_RUN_RESULT}.
+ *
+ * A timeout caused the task run to be interrupted.
+ *
+ * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
+ */
+const CICD_PIPELINE_TASK_RUN_RESULT_VALUE_TIMEOUT = "timeout";
+/**
+ * The [URL](https://wikipedia.org/wiki/URL) of the pipeline task run, providing the complete address in order to locate and identify the pipeline task run.
+ *
+ * @example https://github.com/open-telemetry/semantic-conventions/actions/runs/9753949763/job/26920038674?pr=1075
+ *
+ * @experimental This attribute is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
+ */
+const ATTR_CICD_PIPELINE_TASK_RUN_URL_FULL = 'cicd.pipeline.task.run.url.full';
+/**
+ * The type of the task within a pipeline.
+ *
+ * @example build
+ * @example test
+ * @example deploy
+ *
+ * @experimental This attribute is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
+ */
+const ATTR_CICD_PIPELINE_TASK_TYPE = 'cicd.pipeline.task.type';
+/**
+ * Enum value "build" for attribute {@link ATTR_CICD_PIPELINE_TASK_TYPE}.
+ *
+ * build
+ *
+ * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
+ */
+const CICD_PIPELINE_TASK_TYPE_VALUE_BUILD = "build";
+/**
+ * Enum value "deploy" for attribute {@link ATTR_CICD_PIPELINE_TASK_TYPE}.
+ *
+ * deploy
+ *
+ * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
+ */
+const CICD_PIPELINE_TASK_TYPE_VALUE_DEPLOY = "deploy";
+/**
+ * Enum value "test" for attribute {@link ATTR_CICD_PIPELINE_TASK_TYPE}.
+ *
+ * test
+ *
+ * @experimental This enum value is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
+ */
+const CICD_PIPELINE_TASK_TYPE_VALUE_TEST = "test";
+/**
+ * The unique identifier of a worker within a CICD system.
+ *
+ * @example abc123
+ * @example 10.0.1.2
+ * @example controller
+ *
+ * @experimental This attribute is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
+ */
+const ATTR_CICD_WORKER_ID = 'cicd.worker.id';
+/**
+ * The name of a worker within a CICD system.
+ *
+ * @example agent-abc
+ * @example controller
+ * @example Ubuntu LTS
+ *
+ * @experimental This attribute is experimental and is subject to breaking changes in minor releases of `@opentelemetry/semantic-conventions`.
+ */
+const ATTR_CICD_WORKER_NAME = 'cicd.worker.name';
+
+// Modest cap to stay clear of GitHub's secondary rate limits on concurrent requests
+const MAX_CONCURRENT_REQUESTS = 8;
+async function mapWithConcurrency(items, fn) {
+    const results = new Array(items.length);
+    let nextIndex = 0;
+    async function worker() {
+        while (nextIndex < items.length) {
+            const i = nextIndex++;
+            results[i] = await fn(items[i]);
+        }
+    }
+    await Promise.all(Array.from({ length: Math.min(MAX_CONCURRENT_REQUESTS, items.length) }, worker));
+    return results;
+}
+async function getWorkflowRun(context, octokit, runId) {
+    const res = await octokit.rest.actions.getWorkflowRun({
+        ...context.repo,
+        run_id: runId,
+    });
+    return res.data;
+}
+async function listJobsForWorkflowRun(context, octokit, runId) {
+    return await octokit.paginate(octokit.rest.actions.listJobsForWorkflowRun, {
+        ...context.repo,
+        run_id: runId,
+        filter: "latest", // risk of missing a run if re-run happens between Action trigger and this query
+        per_page: 100,
+    });
+}
+async function getJobsAnnotations(context, octokit, jobIds) {
+    const annotations = {};
+    const results = await mapWithConcurrency(jobIds, (jobId) => listAnnotations(context, octokit, jobId));
+    for (const [i, jobId] of jobIds.entries()) {
+        annotations[jobId] = results[i];
+    }
+    return annotations;
+}
+async function listAnnotations(context, octokit, checkRunId) {
+    return await octokit.paginate(octokit.rest.checks.listAnnotations, {
+        ...context.repo,
+        check_run_id: checkRunId,
+    });
+}
+async function getPRsLabels(context, octokit, prNumbers) {
+    const labels = {};
+    const results = await mapWithConcurrency(prNumbers, (prNumber) => listLabelsOnIssue(context, octokit, prNumber));
+    for (const [i, prNumber] of prNumbers.entries()) {
+        labels[prNumber] = results[i];
+    }
+    return labels;
+}
+async function listLabelsOnIssue(context, octokit, prNumber) {
+    return await octokit.paginate(octokit.rest.issues.listLabelsOnIssue, {
+        ...context.repo,
+        issue_number: prNumber,
+    }, (response) => response.data.map((issue) => issue.name));
+}
+
 const errorConclusions = new Set(["failure", "timed_out", "startup_failure"]);
 /**
  * Record the span status according to the OpenTelemetry recording-errors conventions:
@@ -36213,15 +36213,12 @@ function annotationsToAttributes(annotations) {
     return attributes;
 }
 
-function traceWorkflowRun(workflowRun, jobs, jobAnnotations, prLabels) {
+function traceWorkflowRun(workflowRun, jobs, jobAnnotations, prLabels, externalParent) {
     const tracer = trace.getTracer("otel-cicd-action");
     const startTime = new Date(workflowRun.run_started_at ?? workflowRun.created_at);
     const attributes = workflowRunToAttributes(workflowRun, prLabels);
-    return tracer.startActiveSpan(workflowRun.name ?? workflowRun.display_title, 
-    // The pipeline run span kind SHOULD be SERVER, while its task run spans —
-    // the job and step spans below — SHOULD be INTERNAL, which is the default.
-    // https://opentelemetry.io/docs/specs/semconv/cicd/cicd-spans/#pipeline-run
-    { attributes, kind: SpanKind.SERVER, root: true, startTime }, (rootSpan) => {
+    const spanName = workflowRun.name ?? workflowRun.display_title;
+    const recordRun = (rootSpan) => {
         recordConclusion(rootSpan, workflowRun.conclusion);
         // "Queued" span represent the time between the workflow has been started_at and
         // the first job has been picked up by a runner. Jobs are not guaranteed to be
@@ -36236,7 +36233,22 @@ function traceWorkflowRun(workflowRun, jobs, jobAnnotations, prLabels) {
         }
         rootSpan.end(new Date(workflowRun.updated_at));
         return rootSpan.spanContext().traceId;
+    };
+    // The pipeline run span kind SHOULD be SERVER, while its task run spans —
+    // the job and step spans below — SHOULD be INTERNAL, which is the default.
+    // https://opentelemetry.io/docs/specs/semconv/cicd/cicd-spans/#pipeline-run
+    const kind = SpanKind.SERVER;
+    if (!externalParent) {
+        return tracer.startActiveSpan(spanName, { attributes, kind, root: true, startTime }, recordRun);
+    }
+    // root: true would drop this parent before the span is created.
+    const parentContext = trace.setSpanContext(ROOT_CONTEXT, {
+        traceId: externalParent.traceId,
+        spanId: externalParent.parentSpanId,
+        traceFlags: TraceFlags.SAMPLED,
+        isRemote: true,
     });
+    return tracer.startActiveSpan(spanName, { attributes, kind, startTime }, parentContext, recordRun);
 }
 function workflowRunToAttributes(workflowRun, prLabels) {
     return {
@@ -77242,6 +77254,20 @@ async function fetchGithub(token, runId) {
     }
     return { workflowRun, jobs, jobAnnotations, prLabels };
 }
+function readExternalParent() {
+    const traceId = getInput("traceId").trim().toLowerCase();
+    const parentSpanId = getInput("parentSpanId").trim().toLowerCase();
+    if (traceId === "" && parentSpanId === "") {
+        return undefined;
+    }
+    if (traceId === "" || parentSpanId === "") {
+        throw new Error("traceId and parentSpanId must both be set or both be empty");
+    }
+    if (!(isValidTraceId(traceId) && isValidSpanId(parentSpanId))) {
+        throw new Error("traceId must be 32 lowercase hex characters and parentSpanId must be 16 lowercase hex characters, and neither may be all zeroes");
+    }
+    return { traceId, parentSpanId };
+}
 async function run() {
     try {
         const otlpEndpoint = getInput("otlpEndpoint");
@@ -77251,6 +77277,7 @@ async function run() {
         const extraAttributes = stringToRecord(getInput("extraAttributes"));
         const ghToken = getInput("githubToken") || process.env["GITHUB_TOKEN"] || "";
         const otlpInsecureSkipVerify = getBooleanInput("otlpInsecureSkipVerify");
+        const externalParent = readExternalParent();
         if (otlpInsecureSkipVerify) {
             warning("TLS certificate verification is disabled for the OTLP exporter.");
         }
@@ -77271,7 +77298,7 @@ async function run() {
         };
         const provider = createTracerProvider(otlpEndpoint, otlpHeaders, attributes, otlpInsecureSkipVerify);
         info(`Trace workflow run for ${runId} and export to ${otlpEndpoint}`);
-        const traceId = traceWorkflowRun(workflowRun, jobs, jobAnnotations, prLabels);
+        const traceId = traceWorkflowRun(workflowRun, jobs, jobAnnotations, prLabels, externalParent);
         setOutput("traceId", traceId);
         info(`traceId: ${traceId}`);
         info("Flush and shutdown tracer provider");

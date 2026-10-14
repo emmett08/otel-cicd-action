@@ -1,5 +1,5 @@
 import type { components } from "@octokit/openapi-types";
-import { type Attributes, context, SpanKind, trace } from "@opentelemetry/api";
+import { type Attributes, context, ROOT_CONTEXT, type Span, SpanKind, TraceFlags, trace } from "@opentelemetry/api";
 import {
   ATTR_CICD_PIPELINE_ACTION_NAME,
   ATTR_CICD_PIPELINE_NAME,
@@ -21,44 +21,63 @@ import {
 import { traceJob } from "./job";
 import { recordConclusion } from "./status";
 
+interface ExternalSpanParent {
+  parentSpanId: string;
+  traceId: string;
+}
+
 function traceWorkflowRun(
   workflowRun: components["schemas"]["workflow-run"],
   jobs: components["schemas"]["job"][],
   jobAnnotations: Record<number, components["schemas"]["check-annotation"][]>,
-  prLabels: Record<number, string[]>
+  prLabels: Record<number, string[]>,
+  externalParent?: ExternalSpanParent
 ) {
   const tracer = trace.getTracer("otel-cicd-action");
 
   const startTime = new Date(workflowRun.run_started_at ?? workflowRun.created_at);
   const attributes = workflowRunToAttributes(workflowRun, prLabels);
+  const spanName = workflowRun.name ?? workflowRun.display_title;
 
-  return tracer.startActiveSpan(
-    workflowRun.name ?? workflowRun.display_title,
-    // The pipeline run span kind SHOULD be SERVER, while its task run spans —
-    // the job and step spans below — SHOULD be INTERNAL, which is the default.
-    // https://opentelemetry.io/docs/specs/semconv/cicd/cicd-spans/#pipeline-run
-    { attributes, kind: SpanKind.SERVER, root: true, startTime },
-    (rootSpan) => {
-      recordConclusion(rootSpan, workflowRun.conclusion);
+  const recordRun = (rootSpan: Span) => {
+    recordConclusion(rootSpan, workflowRun.conclusion);
 
-      // "Queued" span represent the time between the workflow has been started_at and
-      // the first job has been picked up by a runner. Jobs are not guaranteed to be
-      // ordered by start time, so take the earliest one.
-      const jobStartTimes = jobs.map((job) => new Date(job.started_at).getTime()).filter(Number.isFinite);
+    // "Queued" span represent the time between the workflow has been started_at and
+    // the first job has been picked up by a runner. Jobs are not guaranteed to be
+    // ordered by start time, so take the earliest one.
+    const jobStartTimes = jobs.map((job) => new Date(job.started_at).getTime()).filter(Number.isFinite);
 
-      if (jobStartTimes.length > 0) {
-        const queuedSpan = tracer.startSpan("Queued", { startTime }, context.active());
-        queuedSpan.end(new Date(Math.max(startTime.getTime(), Math.min(...jobStartTimes))));
-      }
-
-      for (const job of jobs) {
-        traceJob(job, jobAnnotations[job.id]);
-      }
-
-      rootSpan.end(new Date(workflowRun.updated_at));
-      return rootSpan.spanContext().traceId;
+    if (jobStartTimes.length > 0) {
+      const queuedSpan = tracer.startSpan("Queued", { startTime }, context.active());
+      queuedSpan.end(new Date(Math.max(startTime.getTime(), Math.min(...jobStartTimes))));
     }
-  );
+
+    for (const job of jobs) {
+      traceJob(job, jobAnnotations[job.id]);
+    }
+
+    rootSpan.end(new Date(workflowRun.updated_at));
+    return rootSpan.spanContext().traceId;
+  };
+
+  // The pipeline run span kind SHOULD be SERVER, while its task run spans —
+  // the job and step spans below — SHOULD be INTERNAL, which is the default.
+  // https://opentelemetry.io/docs/specs/semconv/cicd/cicd-spans/#pipeline-run
+  const kind = SpanKind.SERVER;
+
+  if (!externalParent) {
+    return tracer.startActiveSpan(spanName, { attributes, kind, root: true, startTime }, recordRun);
+  }
+
+  // root: true would drop this parent before the span is created.
+  const parentContext = trace.setSpanContext(ROOT_CONTEXT, {
+    traceId: externalParent.traceId,
+    spanId: externalParent.parentSpanId,
+    traceFlags: TraceFlags.SAMPLED,
+    isRemote: true,
+  });
+
+  return tracer.startActiveSpan(spanName, { attributes, kind, startTime }, parentContext, recordRun);
 }
 
 function workflowRunToAttributes(
@@ -219,4 +238,5 @@ function prsToAttributes(
   return attributes;
 }
 
+export type { ExternalSpanParent };
 export { traceWorkflowRun };
