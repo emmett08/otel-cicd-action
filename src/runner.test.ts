@@ -19,7 +19,7 @@ process.env["OTEL_ID_SEED"] = "123"; // seed for stable otel ids generation
 
 // The module being tested should be imported dynamically. This ensures that the
 // mocks are used in place of any actual dependencies.
-const { run, isOctokitError } = await import("./runner");
+const { run, isOctokitError, readExternalParent } = await import("./runner");
 
 describe("isOctokitError", () => {
   it("returns true", () => {
@@ -134,4 +134,68 @@ describe("run", () => {
     expect(core.setFailed).toHaveBeenCalledWith(expect.any(Error));
     expect(core.setOutput).not.toHaveBeenCalled();
   }, 10_000);
+
+  function mockInputs(overrides: Record<string, string>) {
+    core.getInput.mockImplementation((name: string) => {
+      if (Object.hasOwn(overrides, name)) {
+        return overrides[name];
+      }
+      switch (name) {
+        case "otlpEndpoint":
+          return "";
+        case "otlpHeaders":
+          return "";
+        case "otelServiceName":
+          return "otel-cicd-action";
+        case "runId":
+          return runId;
+        case "githubToken":
+          return token;
+        case "extraAttributes":
+          return "extra.attribute=1,key2=value2";
+        default:
+          return "";
+      }
+    });
+  }
+
+  it("fails when only one external id is set", async () => {
+    mockInputs({ traceId: "0123456789abcdef0123456789abcdef", parentSpanId: "" });
+
+    await run();
+
+    expect(core.setOutput).not.toHaveBeenCalled();
+    expect(core.setFailed).toHaveBeenCalledWith(
+      expect.objectContaining({ message: "traceId and parentSpanId must both be set or both be empty" })
+    );
+  });
+
+  it("fails when an external id is not a valid trace or span id", async () => {
+    mockInputs({
+      traceId: "ab".repeat(32),
+      parentSpanId: "0000000000000000",
+    });
+
+    await run();
+
+    expect(core.setOutput).not.toHaveBeenCalled();
+    expect(core.setFailed).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message:
+          "traceId must be 32 lowercase hex characters and parentSpanId must be 16 lowercase hex characters, and neither may be all zeroes",
+      })
+    );
+  });
+
+  it("accepts a trimmed lowercase pair of external ids", () => {
+    mockInputs({
+      traceId: "  0123456789ABCDEF0123456789ABCDEF  ",
+      parentSpanId: "FEDCBA9876543210",
+    });
+
+    expect(readExternalParent()).toEqual({
+      traceId: "0123456789abcdef0123456789abcdef",
+      parentSpanId: "fedcba9876543210",
+    });
+  });
 });

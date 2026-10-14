@@ -1,5 +1,6 @@
+import { jest } from "@jest/globals";
 import type { components } from "@octokit/openapi-types";
-import { context, SpanKind, trace } from "@opentelemetry/api";
+import { context, SpanKind, TraceFlags, trace } from "@opentelemetry/api";
 import { AsyncLocalStorageContextManager } from "@opentelemetry/context-async-hooks";
 import { BasicTracerProvider, InMemorySpanExporter, SimpleSpanProcessor } from "@opentelemetry/sdk-trace-base";
 import { traceWorkflowRun } from "./workflow";
@@ -105,5 +106,45 @@ describe("traceWorkflowRun", () => {
     traceWorkflowRun(fakeWorkflowRun({}), [], {}, {});
 
     expect(exporter.getFinishedSpans().find((span) => span.name === "Queued")).toBeUndefined();
+  });
+
+  it("parents the workflow span on an external sampled parent and keeps the job under it", () => {
+    const traceId = "0123456789abcdef0123456789abcdef";
+    const parentSpanId = "fedcba9876543210";
+    const jobs = [fakeJob("build", "2026-01-01T00:00:04Z")];
+    const tracer = trace.getTracer("otel-cicd-action");
+    const startActiveSpan = jest.spyOn(tracer, "startActiveSpan");
+
+    const returned = traceWorkflowRun(fakeWorkflowRun({}), jobs, {}, {}, { traceId, parentSpanId });
+
+    const workflowCall = startActiveSpan.mock.calls.find((call) => call[0] === "Test workflow");
+    expect(workflowCall?.[1]).not.toHaveProperty("root");
+
+    const spans = exporter.getFinishedSpans();
+    const workflow = spans.find((span) => span.name === "Test workflow");
+    const job = spans.find((span) => span.name === "build");
+
+    expect(returned).toBe(traceId);
+    expect(workflow?.kind).toBe(SpanKind.SERVER);
+    expect(workflow?.spanContext().traceId).toBe(traceId);
+    expect(workflow?.spanContext().spanId).not.toBe(parentSpanId);
+    expect(workflow?.parentSpanContext).toMatchObject({
+      traceId,
+      spanId: parentSpanId,
+      traceFlags: TraceFlags.SAMPLED,
+      isRemote: true,
+    });
+    expect(job?.spanContext().traceId).toBe(traceId);
+    expect(job?.parentSpanContext?.spanId).toBe(workflow?.spanContext().spanId);
+    expect(job?.parentSpanContext?.spanId).not.toBe(parentSpanId);
+
+    startActiveSpan.mockRestore();
+  });
+
+  it("leaves the workflow span without a parent when no external parent is set", () => {
+    traceWorkflowRun(fakeWorkflowRun({}), [fakeJob("build", "2026-01-01T00:00:04Z")], {}, {});
+
+    const workflow = exporter.getFinishedSpans().find((span) => span.name === "Test workflow");
+    expect(workflow?.parentSpanContext).toBeUndefined();
   });
 });

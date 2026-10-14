@@ -26,6 +26,14 @@ inputs:
   extraAttributes:
     description: Extra resource attributes to add to each span
     required: false
+  traceId:
+    description: Optional rollout trace id. 32 lowercase hex characters. Set together with parentSpanId, or leave both empty.
+    required: false
+    default: ""
+  parentSpanId:
+    description: Optional rollout root span id. 16 lowercase hex characters. The workflow span becomes a child of this remote parent.
+    required: false
+    default: ""
   otlpInsecureSkipVerify:
     description: Disable TLS certificate verification for the OTLP exporter. This is insecure and should only be used with trusted endpoints.
     required: false
