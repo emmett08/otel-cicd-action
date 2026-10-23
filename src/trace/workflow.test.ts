@@ -124,7 +124,7 @@ describe("traceWorkflowRun", () => {
     const workflow = spans.find((span) => span.name === "Test workflow");
     const job = spans.find((span) => span.name === "build");
 
-    expect(returned).toBe(traceId);
+    expect(returned).toEqual({ traceId, workflowSpanId: workflow?.spanContext().spanId });
     expect(workflow?.kind).toBe(SpanKind.SERVER);
     expect(workflow?.spanContext().traceId).toBe(traceId);
     expect(workflow?.spanContext().spanId).not.toBe(parentSpanId);
@@ -142,9 +142,13 @@ describe("traceWorkflowRun", () => {
   });
 
   it("leaves the workflow span without a parent when no external parent is set", () => {
-    traceWorkflowRun(fakeWorkflowRun({}), [fakeJob("build", "2026-01-01T00:00:04Z")], {}, {});
+    const returned = traceWorkflowRun(fakeWorkflowRun({}), [fakeJob("build", "2026-01-01T00:00:04Z")], {}, {});
 
     const workflow = exporter.getFinishedSpans().find((span) => span.name === "Test workflow");
     expect(workflow?.parentSpanContext).toBeUndefined();
+    expect(returned).toEqual({
+      traceId: workflow?.spanContext().traceId,
+      workflowSpanId: workflow?.spanContext().spanId,
+    });
   });
 });

@@ -40,7 +40,9 @@ inputs:
     default: "false"
 outputs:
   traceId:
-    description: The OpenTelemetry Trace ID of the root span
+    description: The OpenTelemetry Trace ID of the workflow span
+  workflowSpanId:
+    description: The OpenTelemetry Span ID of the workflow span. Use with traceId to parent additional workflow spans.
 
 branding:
   icon: bar-chart-2

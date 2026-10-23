@@ -36232,7 +36232,8 @@ function traceWorkflowRun(workflowRun, jobs, jobAnnotations, prLabels, externalP
             traceJob(job, jobAnnotations[job.id]);
         }
         rootSpan.end(new Date(workflowRun.updated_at));
-        return rootSpan.spanContext().traceId;
+        const { traceId, spanId } = rootSpan.spanContext();
+        return { traceId, workflowSpanId: spanId };
     };
     // The pipeline run span kind SHOULD be SERVER, while its task run spans —
     // the job and step spans below — SHOULD be INTERNAL, which is the default.
@@ -77298,9 +77299,11 @@ async function run() {
         };
         const provider = createTracerProvider(otlpEndpoint, otlpHeaders, attributes, otlpInsecureSkipVerify);
         info(`Trace workflow run for ${runId} and export to ${otlpEndpoint}`);
-        const traceId = traceWorkflowRun(workflowRun, jobs, jobAnnotations, prLabels, externalParent);
+        const { traceId, workflowSpanId } = traceWorkflowRun(workflowRun, jobs, jobAnnotations, prLabels, externalParent);
         setOutput("traceId", traceId);
+        setOutput("workflowSpanId", workflowSpanId);
         info(`traceId: ${traceId}`);
+        info(`workflowSpanId: ${workflowSpanId}`);
         info("Flush and shutdown tracer provider");
         await provider.forceFlush();
         await provider.shutdown();

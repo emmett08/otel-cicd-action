@@ -101,10 +101,12 @@ async function run() {
     const provider = createTracerProvider(otlpEndpoint, otlpHeaders, attributes, otlpInsecureSkipVerify);
 
     core.info(`Trace workflow run for ${runId} and export to ${otlpEndpoint}`);
-    const traceId = traceWorkflowRun(workflowRun, jobs, jobAnnotations, prLabels, externalParent);
+    const { traceId, workflowSpanId } = traceWorkflowRun(workflowRun, jobs, jobAnnotations, prLabels, externalParent);
 
     core.setOutput("traceId", traceId);
+    core.setOutput("workflowSpanId", workflowSpanId);
     core.info(`traceId: ${traceId}`);
+    core.info(`workflowSpanId: ${workflowSpanId}`);
 
     core.info("Flush and shutdown tracer provider");
     await provider.forceFlush();
