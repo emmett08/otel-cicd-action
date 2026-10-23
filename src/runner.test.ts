@@ -96,6 +96,7 @@ describe("run", () => {
 
     expect(core.setFailed).not.toHaveBeenCalled();
     expect(core.setOutput).toHaveBeenCalledWith("traceId", "329e58aa53cec7a2beadd2fd0a85c388");
+    expect(core.setOutput).toHaveBeenCalledWith("workflowSpanId", "991f2b235b36cb2c");
   }, 10_000);
 
   it("should run a failed workflow", async () => {

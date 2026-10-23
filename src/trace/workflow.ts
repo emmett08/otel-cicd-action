@@ -57,7 +57,8 @@ function traceWorkflowRun(
     }
 
     rootSpan.end(new Date(workflowRun.updated_at));
-    return rootSpan.spanContext().traceId;
+    const { traceId, spanId } = rootSpan.spanContext();
+    return { traceId, workflowSpanId: spanId };
   };
 
   // The pipeline run span kind SHOULD be SERVER, while its task run spans —

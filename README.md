@@ -146,9 +146,14 @@ man-in-the-middle attacks. Only use it with a trusted internal endpoint.
 
 ### Action Outputs
 
-| name    | description                                 |
-| ------- | ------------------------------------------- |
-| traceId | The OpenTelemetry Trace ID of the root span |
+| name           | description                                                                                             |
+| -------------- | ------------------------------------------------------------------------------------------------------- |
+| traceId        | The OpenTelemetry Trace ID of the workflow span                                                          |
+| workflowSpanId | The OpenTelemetry Span ID of the workflow span. Use with `traceId` to parent additional workflow spans. |
+
+`workflowSpanId` identifies the exported workflow span even when the `traceId` and `parentSpanId`
+inputs place it below an external parent. Additional spans for the workflow can use the output
+`traceId` and `workflowSpanId` as their trace ID and parent span ID.
 
 ## What data is exported
 
